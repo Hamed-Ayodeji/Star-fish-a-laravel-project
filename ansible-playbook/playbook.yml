@@ -1,0 +1,14 @@
+---
+- name: Deployment of PHP application with LAMP stack
+  hosts: all
+  become: yes
+  become_method: sudo
+
+  tasks:
+    - name: Copy deployment script
+      copy:
+        src: deploy.sh
+        dest: /tmp/master-deploy.sh
+
+    - name: Execute deployment script
+      shell: bash /tmp/master-deploy.sh
