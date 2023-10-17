@@ -19,7 +19,22 @@ sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password passwor
 sudo debconf-set-selections <<< 'mysql-server mysql-server/root_password_again password cisco123'
 
 # Install PHP
-sudo apt-get install php libapache2-mod-php php-mcrypt php-mysql -y
+sudo apt-get install php libapache2-mod-php php-mcrypt php-mysql php-zip php-xml php-curl php-cli php-mbstring -y
+
+# Install Composer
+sudo curl -sS https://getcomposer.org/installer | sudo php -- --install-dir=/usr/local/bin --filename=composer
+
+# Move the downloaded composer.phar file to /usr/local/bin/composer
+sudo mv composer.phar /usr/local/bin/composer
+
+# Make the composer.phar executable
+sudo chmod +x /usr/local/bin/composer
+
+# Install unzip
+sudo apt-get install unzip -y
+
+# Install curl
+sudo apt-get install curl -y
 
 # Enable PHP module in Apache
 sudo a2enmod php
@@ -29,6 +44,15 @@ sudo systemctl restart apache2
 
 # Install git
 sudo apt-get install git -y
+
+# Navigate to the Apache web server root directory
+cd /var/www/html || exit
+
+# Remove the default index.html file
+sudo rm -rf index.html
+
+# Change the ownership of the /var/www/html directory to the Apache web server user
+sudo chown -R vagrant:vagrant .
 
 # Clone the PHP application from Github
 sudo git clone https://github.com/laravel/laravel.git
@@ -46,14 +70,9 @@ sudo cp .env.example .env
 sudo php artisan key:generate
 
 # Edit .env file and set the database connection details
-cat > .env << EOF
-DB_CONNECTION=mysql
-DB_HOST=localhost
-DB_PORT=3306
-DB_DATABASE=laravel
-DB_USERNAME=root
-DB_PASSWORD=cisco123
-EOF
+sudo sed -i 's/DB_DATABASE=homestead/DB_DATABASE=laravel/g' .env
+sudo sed -i 's/DB_USERNAME=homestead/DB_USERNAME=root/g' .env
+sudo sed -i 's/DB_PASSWORD=secret/DB_PASSWORD=cisco123/g' .env
 
 # Create a database for the application
 sudo mysql -u root -pcisco123 -e "create database laravel"

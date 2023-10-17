@@ -12,7 +12,7 @@ Vagrant.configure("2") do |config|
       vb.memory = "1024"
       vb.cpus = "1"
     end
-    master.vm.provision "shell", path: "master.sh"
+    master.vm.provision "shell", path: "./ansible-playbook/deploy.sh"
   end
   config.vm.define "Slave" do |slave|
     slave.vm.hostname = "Slave"
