@@ -7,9 +7,9 @@ exec 2>&1
 
 # Check if the script is being run with root privileges
 if [ "$(id -u)" -ne 0 ]; then
-  echo "This script must be run with superuser privileges. Attempting to run with sudo..."
-  exec sudo "$0" "$@"
-  exit 1
+    echo "This script must be run with superuser privileges. Attempting to run with sudo..."
+    exec sudo "$0" "$@"
+    exit 1
 fi
 
 # Generate a random secure password for MySQL root user
@@ -19,18 +19,6 @@ mysql_root_password=$(date +%s | sha256sum | base64 | head -c 16)
 echo "Updating and upgrading the system..."
 apt update
 apt upgrade -y
-
-# Add PHP repository and install PHP 8.0
-echo "Adding PHP repository and installing PHP 8.0..."
-add-apt-repository ppa:ondrej/php
-apt update
-apt install -y php8.0
-
-# Set PHP 8.0 as the default PHP version
-update-alternatives --set php /usr/bin/php8.0
-
-# Add this line to allow running Composer as superuser
-export COMPOSER_ALLOW_SUPERUSER=1
 
 # Install Apache web server
 echo "Installing Apache web server..."
@@ -72,9 +60,16 @@ echo "Setting up firewall rules (allowing HTTP traffic)..."
 ufw allow 80/tcp
 ufw --force enable
 
-# Install PHP and necessary modules
+# Install PHP 8.1 and necessary modules
 echo "Installing PHP and required modules..."
-apt install -y libapache2-mod-php php-mysql php-curl php-json php-gd php-mbstring php-xml php-zip
+echo "Adding PHP repository and installing PHP 8.1..."
+add-apt-repository ppa:ondrej/php
+apt update
+apt install -y php8.1
+apt install -y libapache2-mod-php php8.1-mysql php8.1-curl php8.1-json php8.1-gd php8.1-mbstring php8.1-xml php8.1-zip php8.1-cli php8.1-xml
+
+# Set PHP 8.1 as the default PHP version
+update-alternatives --set php /usr/bin/php8.1
 
 # Check if Git is installed and install/upgrade it
 if [ -x "$(command -v git)" ]; then
@@ -85,6 +80,9 @@ else
     echo "Git is not installed. Installing the latest version..."
     apt install -y git
 fi
+
+# Allow running Composer as superuser
+export COMPOSER_ALLOW_SUPERUSER=1
 
 # Install Composer (a PHP package manager)
 echo "Installing Composer..."
