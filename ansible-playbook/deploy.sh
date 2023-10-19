@@ -1,158 +1,216 @@
 #!/bin/bash
-# Automated Ubuntu LAMP Stack Deployment with Laravel
 
-# Log all outputs to deploy.log
-exec > >(tee -i /home/vagrant/deploy.log)
-exec 2>&1
+# This script will automatically deploy a LAMP stack and clone a PHP application from a GitHub repository (https://github.com/laravel/laravel.git) and configure the Apache web server and MySQL database.
 
-# Check if the script is being run with root privileges
-if [ "$(id -u)" -ne 0 ]; then
-    echo "This script must be run with superuser privileges. Attempting to run with sudo..."
-    exec sudo "$0" "$@"
-    exit 1
+# Check if the script is being run as root, if not run as root
+if [[ "$(id -u)" -ne 0 ]]; then
+    sudo -E "$0" "$@"
+    exit
 fi
 
+# Log the all the commands and the output to a file called deploy.log in the shared directory
+shared_dir="/vagrant"
+log_file="$shared_dir/deploy.log"
+exec > >(tee -a "$log_file") 2>&1
+
+# Start logging the script
+echo "========== Deployment started at $(date) =========="
+
+# Update the package list to ensure you download the latest versions of the packages
+echo "========== Updating the package list =========="
+apt-get update -y
+
+# Upgrade the installed packages to the latest versions
+echo "========== Upgrading the installed packages =========="
+apt-get upgrade -y
+
+# Add important repositories to the APT package manager
+echo "========== Adding important repositories to the APT package manager =========="
+apt-get install -y software-properties-common
+add-apt-repository -y ppa:ondrej/php
+
+# Update the package list to ensure you download the latest versions of the packages
+echo "========== Updating the package list =========="
+apt-get update -y
+
+# Install the Apache web server
+echo "========== Installing the Apache web server =========="
+apt-get install -y apache2
+
+# Start and Enable Apache web server
+echo "========== Starting and enabling the Apache web server =========="
+systemctl start apache2
+systemctl enable apache2
+
+#################################################### take a screenshot of test apache page
+
 # Generate a random secure password for MySQL root user
+echo "========== Generating a random secure password for MySQL root user =========="
 mysql_root_password=$(date +%s | sha256sum | base64 | head -c 16)
 
-# Update and upgrade the system
-echo "Updating and upgrading the system..."
-apt update
-apt upgrade -y
+# Install MySQL Server in a Non-Interactive mode. Default root password will be set to the one you set in the previous step
+echo "========== Installing MySQL Server =========="
+debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysql_root_password"
+debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $mysql_root_password"
+apt-get install -y mysql-server
 
-# Install Apache web server
-echo "Installing Apache web server..."
-apt install -y apache2
+# Display the MySQL root password
+echo "========== MySQL root password: $mysql_root_password =========="
 
-# Enable Apache and start the service
-echo "Enabling and starting Apache..."
-systemctl enable apache2
-systemctl start apache2
+# Disallow remote root login
+echo "========== Disallowing remote root login =========="
+sed -i "s/.*bind-address.*/bind-address = 127.0.0.1/" /etc/mysql/mysql.conf.d/mysqld.cnf
 
-# Remove the default Apache configuration
-echo "Removing default Apache configurations..."
-a2dissite 000-default.conf
-rm /etc/apache2/sites-available/000-default.conf
+# Remove the test database
+echo "========== Removing the test database =========="
+mysql -uroot -p"$mysql_root_password" -e "DROP DATABASE IF EXISTS test;" || true
 
-# Remove the default Apache page from /var/www/html
-echo "Removing the default Apache page..."
-rm /var/www/html/index.html
+# Restart MySQL
+echo "========== Restarting MySQL =========="
+systemctl restart mysql
 
-# Create a new VirtualHost configuration for Laravel
-echo "Creating new Apache configuration for Laravel..."
+# Install PHP and some of the most common PHP extensions
+echo "========== Installing PHP and some of the most common PHP extensions =========="
+apt-get install -y php8.2 libapache2-mod-php8.2 php8.2-common php8.2-mysql php8.2-gmp php8.2-curl php8.2-intl php8.2-mbstring php8.2-xmlrpc php8.2-gd php8.2-xml php8.2-cli php8.2-zip php8.2-tokenizer php8.2-bcmath php8.2-soap php8.2-imap unzip
+
+# Configure PHP
+echo "========== Configuring PHP =========="
+sed -i "s/;cgi.fix_pathinfo=1/cgi.fix_pathinfo=0/" /etc/php/8.2/apache2/php.ini
+
+# Restart Apache web server
+echo "========== Restarting Apache web server =========="
+systemctl restart apache2
+
+# Install Composer
+echo "========== Installing Composer =========="
+curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Move the downloaded binary to the /usr/local/bin directory, so that you can run it with just the composer command
+echo "========== Moving the downloaded binary to the /usr/local/bin directory =========="
+mv composer.phar /usr/local/bin/composer
+
+# Configure Apache web server
+echo "========== Configuring Apache web server =========="
+
+# Create a new Apache configuration file for Laravel
+echo "========== Creating a new Apache configuration file for Laravel =========="
 cat > /etc/apache2/sites-available/laravel.conf <<EOL
 <VirtualHost *:80>
-    ServerAdmin webmaster@localhost
-    DocumentRoot /var/www/html/laravel/public
+    ServerAdmin ayodejihamed@gmail.com
+    ServerName 192.168.56.20
+    DocumentRoot /var/www/laravel/public
+
+    <Directory /var/www/laravel>
+        Options Indexes FollowSymLinks MultiViews
+        AllowOverride All
+        Require all granted
+    </Directory>
+
     ErrorLog ${APACHE_LOG_DIR}/error.log
     CustomLog ${APACHE_LOG_DIR}/access.log combined
 </VirtualHost>
 EOL
 
-# Enable the new VirtualHost
+# Disable the default Apache configuration file
+echo "========== Disabling the default Apache configuration file =========="
+a2dissite 000-default.conf
+
+# Enable the new Laravel configuration file
+echo "========== Enabling the new Laravel configuration file =========="
+a2enmod rewrite
 a2ensite laravel.conf
 
-# Enable the Apache rewrite module
-a2enmod rewrite
+# Restart Apache web server
+echo "========== Restarting Apache web server =========="
+systemctl restart apache2
 
-# Set up firewall rules (allow HTTP traffic)
-echo "Setting up firewall rules (allowing HTTP traffic)..."
-ufw allow 80/tcp
-ufw --force enable
-
-# Install PHP 8.1 and necessary modules
-echo "Installing PHP and required modules..."
-echo "Adding PHP repository and installing PHP 8.1..."
-add-apt-repository ppa:ondrej/php
-apt update
-apt install -y php8.1
-apt install -y libapache2-mod-php php8.1-mysql php8.1-curl php8.1-json php8.1-gd php8.1-mbstring php8.1-xml php8.1-zip php8.1-cli php8.1-xml
-
-# Set PHP 8.1 as the default PHP version
-update-alternatives --set php /usr/bin/php8.1
-
+# Install git if it is not already installed and update it to the latest version
+echo "========== Installing git =========="
 # Check if Git is installed and install/upgrade it
 if [ -x "$(command -v git)" ]; then
     echo "Git is already installed. Checking for updates..."
-    apt update
-    apt install --only-upgrade git
+    apt-get update
+    apt-get install --only-upgrade git
 else
     echo "Git is not installed. Installing the latest version..."
-    apt install -y git
+    apt-get install -y git
 fi
 
-# Allow running Composer as superuser
-export COMPOSER_ALLOW_SUPERUSER=1
+# Navigate to the web root directory
+echo "========== Navigating to the web root directory =========="
+cd /var/www/html || exit
 
-# Install Composer (a PHP package manager)
-echo "Installing Composer..."
-curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
-
-# Clone the Laravel Git repository
-echo "Cloning the Laravel Git repository..."
-cd /var/www/html
+# Clone the Laravel repository from GitHub
+echo "========== Cloning the Laravel repository from GitHub =========="
 git clone https://github.com/laravel/laravel.git
 
-# Install MySQL server and set the root password
-echo "Installing MySQL server and setting the root password..."
-debconf-set-selections <<< "mysql-server mysql-server/root_password password $mysql_root_password"
-debconf-set-selections <<< "mysql-server mysql-server/root_password_again password $mysql_root_password"
-apt install -y mysql-server
+# Navigate to the Laravel application directory
+echo "========== Navigating to the Laravel application directory =========="
+cd laravel || exit
 
-# Securely display the MySQL root password
-echo "The MySQL root password is: $mysql_root_password"
+# Install the Laravel application dependencies
+echo "========== Installing the Laravel application dependencies =========="
+composer install --no-interaction --no-dev
 
-# Install Laravel dependencies using Composer
-echo "Installing Laravel dependencies..."
-cd /var/www/html/laravel
-composer install
-
-# Set appropriate ownership for the Laravel project
-echo "Setting ownership for Laravel project..."
+# Set Laravel permissions
+echo "========== Setting Laravel permissions =========="
 chown -R www-data:www-data /var/www/html/laravel
-
-# Copy the .env.example to .env
-echo "Copying .env.example to .env..."
-cp /var/www/html/laravel/.env.example /var/www/html/laravel/.env
-
-# Generate the Laravel application key
-echo "Generating Laravel application key..."
-php /var/www/html/laravel/artisan key:generate
-
-# Edit the .env file to set the database connection details
-echo "Editing .env file to set database connection details..."
-sed -i 's/DB_USERNAME=/DB_USERNAME=root/g' /var/www/html/laravel/.env
-sed -i 's/DB_PASSWORD=/DB_PASSWORD='$mysql_root_password'/g' /var/www/html/laravel/.env
-
-# Create a new MySQL database for the Laravel application
-echo "Creating a new MySQL database for the Laravel application..."
-mysql -u root -p$mysql_root_password -e "CREATE DATABASE laravel_db;"
-
-# Set the Laravel application to use the new database
-echo "Configuring Laravel to use the new database..."
-sed -i 's/DB_DATABASE=/DB_DATABASE=laravel_db/g' /var/www/html/laravel/.env
-
-# Run Laravel database migrations
-echo "Running Laravel database migrations..."
-php /var/www/html/laravel/artisan migrate
-
-# Generate a symbolic link for the storage directory
-echo "Generating a symbolic link for the storage directory..."
-php /var/www/html/laravel/artisan storage:link
-
-# Set permissions for the Laravel application directory
-echo "Setting permissions for the Laravel application directory..."
-chown -R www-data:www-data /var/www/html/laravel
+chmod -R 755 /var/www/html/laravel
 chmod -R 755 /var/www/html/laravel/storage
 chmod -R 755 /var/www/html/laravel/bootstrap/cache
 
-# Generate the optimized class loader
-echo "Generating the optimized class loader..."
-php /var/www/html/laravel/artisan optimize
+# Create a new .env file from the .env.example file
+echo "========== Creating a new .env file from the .env.example file =========="
+cp .env.example .env
 
-# Restart Apache to apply all changes
-echo "Restarting Apache to apply all changes..."
+# Generate an application key
+echo "========== Generating an application key =========="
+php artisan key:generate
+
+# Database Setup
+echo "========== Database Setup =========="
+mysql -uroot -p"$mysql_root_password" -e "CREATE DATABASE laravel;"
+
+# Grant the database user full permissions to the database
+echo "========== Granting the database user full permissions to the database =========="
+mysql -uroot -p"$mysql_root_password" -e "GRANT ALL PRIVILEGES ON laravel.* TO 'laraveluser'@'localhost' IDENTIFIED BY 'password' WITH GRANT OPTION;"
+
+# Update the user privileges
+echo "========== Updating the user privileges =========="
+mysql -uroot -p"$mysql_root_password" -e "FLUSH PRIVILEGES;"
+mysql -uroot -p"$mysql_root_password" -e "EXIT;"
+
+# Update the .env file with the database connection details
+echo "========== Updating the .env file with the database connection details =========="
+sed -i "s/APP_ENV=local/APP_ENV=production/" .env
+sed -i "s/APP_DEBUG=true/APP_DEBUG=false/" .env
+sed -i "s/DB_DATABASE=homestead/DB_DATABASE=laravel/" .env
+sed -i "s/DB_USERNAME=homestead/DB_USERNAME=root/" .env
+sed -i "s/DB_PASSWORD=secret/DB_PASSWORD=$mysql_root_password/" .env
+
+# Cache the configuration values
+echo "========== Caching the configuration values =========="
+php artisan config:cache
+
+# Run the database migrations
+echo "========== Running the database migrations =========="
+php artisan migrate
+
+# Create a symbolic link from public/storage to storage/app/public
+echo "========== Creating a symbolic link from public/storage to storage/app/public =========="
+php artisan storage:link
+
+# Restart Apache web server
+echo "========== Restarting Apache web server =========="
 systemctl restart apache2
 
+# End logging the script
+echo "========== Deployment ended at $(date) =========="
+
+# Add firewall rules
+echo "========== Adding firewall rules =========="
+ufw allow 80/tcp
+ufw allow 443/tcp
+ufw --force enable
+
 # End of script
-echo "Laravel setup completed. Apache has been restarted."
