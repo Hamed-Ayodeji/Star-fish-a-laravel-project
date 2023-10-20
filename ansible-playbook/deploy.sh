@@ -13,6 +13,9 @@ shared_dir="/vagrant"
 log_file="$shared_dir/deploy.log"
 exec > >(tee -a "$log_file") 2>&1
 
+# Get server IP address
+server_ip=$(ip addr show eth1 | awk '/inet / {print $2}' | cut -d/ -f1)
+
 # Start logging the script
 echo "========== Deployment started at $(date) =========="
 
@@ -97,7 +100,7 @@ echo "========== Creating a new Apache configuration file for Laravel ==========
 cat > /etc/apache2/sites-available/laravel.conf <<EOL
 <VirtualHost *:80>
     ServerAdmin ayodejihamed@gmail.com
-    ServerName 192.168.56.20
+    ServerName $server_ip
     DocumentRoot /var/www/html/laravel/public
 
     <Directory /var/www/html/laravel>
@@ -188,8 +191,8 @@ mysql -uroot -p"$mysql_root_password" -e "EXIT;"
 echo "========== Updating the .env file with the database connection details =========="
 sed -i "s/APP_ENV=local/APP_ENV=production/" .env
 sed -i "s/APP_DEBUG=true/APP_DEBUG=false/" .env
-sed -i "s/APP_URL=http://localhost/DB_HOST=http://192.168.56.20/" .env
-sed -i "s/DB_HOST=127.0.0.1/DB_HOST=192.168.56.20/" .env
+sed -i "s/APP_URL=http://localhost/DB_HOST=http://$server_ip/" .env
+sed -i "s/DB_HOST=127.0.0.1/DB_HOST=$server_ip/" .env
 sed -i "s/DB_DATABASE=homestead/DB_DATABASE=laravel/" .env
 sed -i "s/DB_USERNAME=homestead/DB_USERNAME=root/" .env
 sed -i "s/DB_PASSWORD=secret/DB_PASSWORD=$mysql_root_password/" .env
@@ -200,7 +203,7 @@ php artisan config:cache
 
 # Run the database migrations
 echo "========== Running the database migrations =========="
-php artisan migrate
+php artisan migrate --force
 
 # Restart Apache web server
 echo "========== Restarting Apache web server =========="
@@ -216,5 +219,9 @@ ufw allow 80/tcp
 ufw allow 443/tcp
 ufw allow 3306/tcp
 ufw --force enable
+
+# Access the application in a browser using the server IP address
+echo "========== Access the application in a browser using the server IP address =========="
+echo "========== Server IP address: $server_ip =========="
 
 # End of script
