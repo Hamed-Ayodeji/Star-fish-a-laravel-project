@@ -1,14 +1,28 @@
 ---
-- name: Deployment of PHP application with LAMP stack
-  hosts: all
+- name: Execute deployment script
+  hosts: Slave
   become: yes
-  become_method: sudo
 
   tasks:
     - name: Copy deployment script
       copy:
-        src: deploy.sh
-        dest: /tmp/master-deploy.sh
+        src: ./deploy.sh
+        dest: /tmp/deploy.sh
+        mode: 0755
+
+    - name: Edit the bash script before execution
+      replace:
+        path: /tmp/deploy.sh
+        regexp: '192.168.56.20'
+        replace: '192.168.56.21'
+        backup: yes
 
     - name: Execute deployment script
-      shell: bash /tmp/master-deploy.sh
+      shell: /tmp/deploy.sh
+
+    - name: Create a cron job to check the server's uptime every 12 am
+      cron:
+        name: "Check server uptime"
+        minute: "0"
+        hour: "0"
+        job: "uptime >> /vagrant/uptime.log"
