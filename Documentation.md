@@ -20,9 +20,13 @@
    - [Bash Script Log - deploy.log](#bash-script-log---deploylog)
    - [Ansible Playbook Log - ansible.log](#ansible-playbook-log---ansiblelog)
    - [Cron Job Log - uptime.log](#cron-job-log---uptimelog)
-6. [Screenshots](#screenshots-evidence)
-   - [Screenshots of the laravel application deployed with Bash script on the Master](#screenshots-master-node)
-   - [Screenshots of the laravel application deployed with Ansible on the Slave](#screenshots-slave-node)
+6. [Screenshots](#screenshots)
+   - [Screenshot of the Master node on virtualbox](#screenshot-of-the-master-node-on-virtualbox)
+   - [Screenshots of the laravel application deployed with Bash script on the Master](#screenshots-of-the-laravel-application-deployed-with-bash-script-on-the-master)
+   - [Screenshot of the Slave node on virtualbox](#screenshot-of-the-slave-node-on-virtualbox)
+   - [Screenshot of Playbook execution](#screenshot-of-playbook-execution)
+   - [Screenshots of the laravel application deployed with Ansible on the Slave](#screenshots-of-the-laravel-application-deployed-with-ansible-on-the-slave)
+   - [Screenshot of the cronjob](#screenshot-of-the-cronjob)
 7. [Usage](#usage)
 8. [Important Notes](#important-notes)
 9. [Contributing](#contributing)
@@ -509,7 +513,7 @@ The project generates several log files that provide insights into the deploymen
 
 The `deploy.log` file contains detailed logs of the deployment process using the `deploy.sh` script. This log helps in debugging and tracking the execution of the script. The script generates this log to document each step and capture any errors that may occur.
 
-The `deploy.log` file can be found in the project directory.
+You can find the `deploy.log` file [deploy.log](deploy.log) in the project directory.
 
 ### [Ansible Playbook Log - ansible.log](ansible-playbook-log---ansiblelog)
 
@@ -517,21 +521,55 @@ The `ansible.log` file captures the output of the Ansible playbook execution. It
 
  script and executing it on the "Slave" server. This log is essential for troubleshooting and verifying the automation process.
 
-The `ansible.log` file can be found in the project directory.
+You can find the `ansible.log` file [ansible.log](ansible.log) in the project directory.
 
 ### [Cron Job Log - uptime.log](cron-job-log---uptimelog)
 
 The `uptime.log` file records server uptime data. A cron job is scheduled to run daily at 12 am to check and record the server's uptime. The `uptime.log` file accumulates these records over time and serves as evidence of server availability.
 
-The `uptime.log` file can be found in the project directory.
+You can find the `uptime.log` file [uptime.log](uptime.log) in the project directory.
 
-In the next section, we will provide instructions on how to use the project, including the deployment and maintenance of the LAMP stack.
+## [Screenshots](screenshots)
 
-## [Screenshots](screenshots-evidence)
+This section contains screenshots of the deployed application and the execution of the Ansible playbook.
+
+### [Screenshot of the Master node on virtualbox](master-node-on-virtualbox)
+
+![Screenshot of the Master node on virtualbox](./screenshots/Master-node-vb.png)
 
 ### [Screenshots of the laravel application deployed with Bash script on the Master](screenshots-master-node)
 
+![Screenshots of the laravel application deployed with Bash script on the Master](./screenshots/master-server-laravel.png)
+
+![Screenshots of the laravel application deployed with Bash script on the Master](./screenshots/master-server-laravel2.png)
+
+![Screenshots of the laravel application deployed with Bash script on the Master](./screenshots/master-server-laravel3.png)
+
+![Screenshots of the laravel application deployed with Bash script on the Master](./screenshots/master-server-laravel4.png)
+
+### [Screenshot of the Slave node on virtualbox](slave-node-on-virtualbox)
+
+![Screenshot of the Slave node on virtualbox](./screenshots/Slave-node-vb.png)
+
+### [Screenshot of Playbook execution](playbook-execution-screenshot)
+
+![Screenshot of Playbook execution](./screenshots/Ansible-execution.png)
+
 ### [Screenshots of the laravel application deployed with Ansible on the Slave](screenshots-slave-node)
+
+![Screenshots of the laravel application deployed with Ansible on the Slave](./screenshots/slave-server-laravel.png)
+
+![Screenshots of the laravel application deployed with Ansible on the Slave](./screenshots/slave-server-laravel2.png)
+
+![Screenshots of the laravel application deployed with Ansible on the Slave](./screenshots/slave-server-laravel3.png)
+
+![Screenshots of the laravel application deployed with Ansible on the Slave](./screenshots/slave-server-laravel4.png)
+
+### [Screenshot of the cronjob](cronjob-screenshot)
+
+![Screenshot of the cronjob](./screenshots/cronjob.png)
+
+In the next section, we will provide instructions on how to use the project, including the deployment and maintenance of the LAMP stack.
 
 ## [Usage](usage)
 
@@ -539,7 +577,7 @@ This section provides instructions on how to use the project to deploy the LAMP 
 
 To use this project:
 
-1. Clone the project's GitHub repository: [GitHub Repository Link](https://github.com/your-username/your-repo).
+1. Clone the project's GitHub repository: [GitHub Repository Link](https://github.com/Hamed-altschool/Cloud-Eng-v2-2nd-Sems-Exam.git).
 
 2. Configure the `Vagrantfile` to set up the desired server configurations and network settings. Customize the parameters as needed for your environment.
 
@@ -573,7 +611,7 @@ ansible-playbook playbook.yml
 
 ## [Contributing](contributing)
 
-We welcome contributions to this project. If you would like to contribute, follow these steps:
+Contributions to this project are highly welcomed. If you would like to contribute, follow these steps:
 
 1. Fork the project's GitHub repository.
 
@@ -593,8 +631,8 @@ For more information and helpful resources, consider exploring the following ref
 - [GitHub Repository for Laravel](https://github.com/laravel/laravel)
 - [GitHub Repository for Vagrant](https://github.com/hashicorp/vagrant)
 
-This concludes the documentation for the Cloud Engineering Second Semester Examination Project. It is my hope that this comprehensive guide assists you in successfully deploying a LAMP stack and managing server automation.
+This concludes the documentation for my Cloud Engineering Second Semester Examination Project. It is my hope that this comprehensive guide assists you in successfully deploying a LAMP stack and managing server automation.
 
-If you have any questions or need further assistance, please don't hesitate to reach out to the project maintainers or contributors.
+If you have any questions or need further assistance, please don't hesitate to reach out to [me](https://twitter.com/qurtana) or the project contributors.
 
 Thank you for using this project, and best of luck with your cloud engineering endeavors!
