@@ -1,4 +1,4 @@
-# Altschool V2 Second Semester Cloud Engineering Project
+# Automated deployment of a LAMP stack using Vagrant, Bashscript, and Ansible (a Laravel project)
 
 This project automates the deployment of a LAMP (Linux, Apache, MySQL, PHP) stack using Vagrant and Ansible. It deploys a PHP application and sets up server monitoring.
 
