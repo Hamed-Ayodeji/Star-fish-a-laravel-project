@@ -34,7 +34,7 @@
 
 ## [Introduction](introduction)
 
-Welcome to the documentation for the Cloud Engineering Second Semester Examination Project (Deploy LAMP Stack). This documentation provides a comprehensive guide to automating the provisioning and deployment of a LAMP (Linux, Apache, MySQL, PHP) stack using Vagrant, a bash script, Ansible and a PHP application (Laravel). The project aims to streamline the process of setting up a web server environment for hosting PHP applications in this case a Laravel application, which will be cloned from the official Laravel repository [GitHub Repository for Laravel](https://github.com/laravel/laravel).
+Welcome to the documentation for the Star Fish project (Deploy LAMP Stack). This documentation provides a comprehensive guide to automating the provisioning and deployment of a LAMP (Linux, Apache, MySQL, PHP) stack using Vagrant, a bash script, Ansible, and a PHP application (Laravel). The project aims to streamline the process of setting up a web server environment for hosting PHP applications in this case a Laravel application, which will be cloned from the official Laravel repository [GitHub Repository for Laravel](https://github.com/laravel/laravel).
 
 ## [Project Overview](project-overview)
 
@@ -51,13 +51,13 @@ The primary objective of this project is to automate the provisioning of two Ubu
 In addition to the bash script, an Ansible playbook is used to:
 
 1. Execute the bash script on the "Slave" node.
-2. Create a cron job to check the server's uptime every day at 12 am.
+2. Create a cron job to check the server's uptime every day at midnight.
 
 It is also important to verify that the PHP application is accessible through the VM's IP address and take a screenshot as evidence.
 
 ### [Requirements](requirements)
 
-To successfully complete the project, the following requirements must be met:
+To complete the project, the following requirements must be met:
 
 1. Submit the bash script and Ansible playbook to a publicly accessible GitHub repository.
 2. Document the steps in Markdown files, including screenshots where necessary.
@@ -102,13 +102,13 @@ Detailed instructions for provisioning servers using Vagrant can be found in the
 
 The `deploy.sh` script automates the deployment of the LAMP stack. It performs the following tasks:
 
-1. Adds important repositories to the APT package manager.
+1. Add important repositories to the APT package manager.
 2. Updates and upgrades installed packages.
 3. Installs Apache, MySQL, PHP, and other necessary packages.
 4. Configures Apache for a Laravel application.
 5. Installs Composer and sets permissions.
 6. Clones the Laravel application from GitHub and configures it.
-7. Sets up the MySQL database and updates the `.env` file.
+7. Set up the MySQL database and update the `.env` file.
 8. Caches configuration values and runs database migrations.
 
 The script also adds firewall rules to allow necessary ports.
@@ -145,7 +145,7 @@ In this section, we provide the content of the code files used in the project.
 # -*- mode: ruby -*-
 # vi: set ft=ruby :
 
-# Deployment of two Ubuntu-based servers, named Master and Slave using vagrant.
+# Deployment of two Ubuntu-based servers, named Master and Slave using Vagrant.
 
 Vagrant.configure("2") do |config|
   config.vm.box = "bento/ubuntu-20.04"
@@ -196,7 +196,7 @@ if [[ "$(id -u)" -ne 0 ]]; then
     exit
 fi
 
-# Log the all the commands and the output to a file called deploy.log in the shared directory
+# Log all the commands and the output to a file called deploy.log in the shared directory
 shared_dir="/vagrant"
 log_file="$shared_dir/deploy.log"
 exec > >(tee -a "$log_file") 2>&1
@@ -233,7 +233,7 @@ apt-get upgrade -y
 #######################################################################################################
 #######################################################################################################
 
-## Install and setup AMP (Apache, MySQL, PHP) and other packages
+## Install and set AMP (Apache, MySQL, PHP) and other packages
 
 # Install the Apache web server
 echo "========== Installing the Apache web server =========="
@@ -339,7 +339,7 @@ fi
 #######################################################################################################
 #######################################################################################################
 
-## Set up Laravel application
+## Set up the Laravel application
 # Navigate to the web root directory
 echo "========== Navigating to the web root directory =========="
 cd /var/www/html || exit
